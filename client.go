@@ -152,7 +152,7 @@ func main() {
 	go sales(dg, flowClient, salesChan)
 
 	// CHANGE THIS TO YOUR DISCORD ID
-	discordID := "169891281139531776"
+	discordID := ""
 
 	go sendAlerts(dg, salesChan, &alerts, discordID)
 

@@ -62,11 +62,6 @@ func handleErr(err error) {
 }
 
 func main() {
-	// file, err := os.Open("token.txt")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// TOKEN, _ := ioutil.ReadAll(file)
 	byteToken, err := ioutil.ReadFile("token.txt")
 	handleFatalErr(err)
 
@@ -155,7 +150,11 @@ func main() {
 	salesChan := make(chan *SaleMoment, 100)
 
 	go sales(dg, flowClient, salesChan)
-	go sendAlerts(dg, salesChan, &alerts)
+
+	// CHANGE THIS TO YOUR DISCORD ID
+	discordID := "169891281139531776"
+
+	go sendAlerts(dg, salesChan, &alerts, discordID)
 
 	fmt.Println("Bot running. Press Ctrl-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -299,8 +298,6 @@ func (alert cardAlert) summary() string {
 // }
 
 func sales(ds *discordgo.Session, fc *client.Client, salesChan chan<- *SaleMoment) {
-	testChannelID := "646832566665478148"
-
 	latestBlock, err := fc.GetLatestBlock(context.Background(), false)
 	handleErr(err)
 
@@ -334,8 +331,8 @@ func sales(ds *discordgo.Session, fc *client.Client, salesChan chan<- *SaleMomen
 						fmt.Println("Error executing script for moment ", e, blockEvent.Height-1)
 						continue
 					}
-					_, err = ds.ChannelMessageSend(testChannelID, saleMoment.String())
-					handleErr(err)
+					// _, err = ds.ChannelMessageSend(testChannelID, saleMoment.String())
+					// handleErr(err)
 					salesChan <- saleMoment
 				}
 			}
@@ -344,12 +341,12 @@ func sales(ds *discordgo.Session, fc *client.Client, salesChan chan<- *SaleMomen
 	}
 }
 
-func sendAlerts(ds *discordgo.Session, salesChan <-chan *SaleMoment, alerts *[]cardAlert) {
+func sendAlerts(ds *discordgo.Session, salesChan <-chan *SaleMoment, alerts *[]cardAlert, discordID string) {
 	for {
 		moment := <-salesChan
 		for _, alert := range *alerts {
 			if doesAlertApply(alert, moment) {
-				channel, _ := ds.UserChannelCreate("169891281139531776")
+				channel, _ := ds.UserChannelCreate(discordID)
 				_, err := ds.ChannelMessageSend(channel.ID, moment.String())
 				handleErr(err)
 			} else {
